@@ -19,6 +19,13 @@ final class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, UserPolicy::class);
         Gate::define('audit.read', fn (User $user): bool => $user->hasPermission('audit.read'));
+        foreach ([
+            'customers.read', 'customers.write', 'customers.categories.manage',
+            'contracts.read', 'contracts.write', 'contracts.activate', 'contracts.pricing.write',
+            'finance.read', 'finance.bill',
+        ] as $permission) {
+            Gate::define($permission, fn (User $user): bool => $user->hasPermission($permission));
+        }
         RateLimiter::for('login', function (Request $request): array {
             $input = $request->input('email');
             $email = is_string($input) ? Str::lower(substr($input, 0, 254)) : '';

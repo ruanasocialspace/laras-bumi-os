@@ -55,7 +55,7 @@ final class RoleCatalog
         'driver' => ['Pengemudi / Kru Pengambilan', ['collections.drive']],
         'weighing_officer' => ['Petugas Timbang', ['waste.read', 'waste.record', 'waste.post']],
         'production_operator' => ['Operator Produksi', ['production.read', 'production.operate']],
-        'finance_officer' => ['Petugas Keuangan', ['finance.read', 'finance.bill', 'finance.payments.record',
+        'finance_officer' => ['Petugas Keuangan', ['customers.read', 'finance.read', 'finance.bill', 'finance.payments.record',
             'finance.adjustments.request', 'finance.expenses.record']],
     ];
 }

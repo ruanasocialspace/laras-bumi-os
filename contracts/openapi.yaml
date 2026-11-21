@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Laras Bumi OS Foundation API
-  version: 0.1.0
+  title: Laras Bumi OS API
+  version: 0.2.0
   description: Cookie-authenticated identity and foundation resources. First obtain an XSRF-TOKEN cookie from GET /sanctum/csrf-cookie on the app origin. For write requests send its decoded value in X-XSRF-TOKEN and send the session cookie with all authenticated requests.
 servers:
   - url: http://localhost:8080/api/v1
@@ -218,6 +218,810 @@ paths:
         '401': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
+  /customer-categories:
+    get:
+      operationId: listCustomerCategories
+      summary: List customer categories
+      description: Requires customers.read.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Category' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createCustomerCategory
+      summary: Create a customer category
+      description: Requires customers.categories.manage.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Category'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers:
+    get:
+      operationId: listCustomers
+      summary: List customers by name, code, category or status
+      description: Requires customers.read.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: q, in: query, schema: { type: string, maxLength: 160 } }
+        - { name: category_id, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string, enum: [active, inactive, archived] } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Customer' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createCustomer
+      summary: Register a customer
+      description: Requires customers.write.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerCreate' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}:
+    get:
+      operationId: getCustomer
+      summary: Read a customer
+      description: Requires customers.read.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateCustomer
+      summary: Change customer name, category or lifecycle
+      description: Requires customers.write.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerUpdate' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}/contacts:
+    get:
+      operationId: listCustomerContacts
+      summary: List contacts for a customer
+      description: Requires customers.read.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Contact' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createCustomerContact
+      summary: Create a customer contact
+      description: Requires customers.write.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Contact'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}/contacts/{record}:
+    patch:
+      operationId: updateCustomerContact
+      summary: Change a customer contact
+      description: Requires customers.write.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: record, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactFields' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Contact'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}/locations:
+    get:
+      operationId: listPickupLocations
+      summary: List pickup locations for a customer
+      description: Requires customers.read.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Location' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createPickupLocation
+      summary: Register a pickup location
+      description: Requires customers.write.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LocationInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Location'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}/locations/{record}:
+    patch:
+      operationId: updatePickupLocation
+      summary: Change a pickup location
+      description: Requires customers.write.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: record, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LocationFields' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Location'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /customers/{customer}/billing-profile:
+    get:
+      operationId: getBillingProfile
+      summary: Read the billing profile or null
+      description: Requires finance.read.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    anyOf:
+                      - $ref: '#/components/schemas/BillingProfile'
+                      - type: 'null'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    put:
+      operationId: saveBillingProfile
+      summary: Create or replace the billing profile
+      description: Requires finance.bill.
+      parameters:
+        - { name: customer, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BillingInput' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BillingProfile'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts:
+    get:
+      operationId: listContracts
+      summary: List contracts by name, code, customer or effective status
+      description: Requires contracts.read.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: q, in: query, schema: { type: string, maxLength: 160 } }
+        - { name: customer_id, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string, enum: [draft, active, suspended, expired, terminated] } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/ServiceContract' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createContract
+      summary: Create a draft contract
+      description: Requires contracts.write.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContractCreate' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceContract'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}:
+    get:
+      operationId: getContract
+      summary: Read a contract and its effective status
+      description: Requires contracts.read.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceContract'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateContract
+      summary: Change draft contract details
+      description: Requires contracts.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContractFields' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceContract'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/history:
+    get:
+      operationId: listContractHistory
+      summary: List append-only contract status history
+      description: Requires contracts.read.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/ContractEvent' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/transitions:
+    post:
+      operationId: transitionContract
+      summary: Record a contract lifecycle transition
+      description: Requires contracts.activate.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransitionInput' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceContract'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/services:
+    get:
+      operationId: listContractServices
+      summary: List services and pickup location names
+      description: Requires contracts.read.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/ContractService' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createContractService
+      summary: Add a service to a draft contract
+      description: Requires contracts.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContractService'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/services/{service}:
+    patch:
+      operationId: updateContractService
+      summary: Submit editable fields for a draft service
+      description: Requires contracts.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: service, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceInput' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContractService'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/services/{service}/rates:
+    get:
+      operationId: listServiceRates
+      summary: List the effective-dated rates of a service
+      description: Requires contracts.read.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: service, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/ServiceRate' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: addServiceRate
+      summary: Append a service rate or amend a future rate boundary
+      description: Requires contracts.pricing.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: service, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RateInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceRate'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/services/{service}/rates/{rate}:
+    patch:
+      operationId: updateDraftServiceRate
+      summary: Submit editable fields for a draft rate
+      description: Requires contracts.pricing.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: service, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: rate, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RateInput' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceRate'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/pickup-schedules:
+    get:
+      operationId: listContractSchedules
+      summary: List weekly schedules for a contract or service
+      description: Requires contracts.read.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - { name: service_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/PickupSchedule' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createContractSchedule
+      summary: Define a weekly pickup schedule
+      description: Requires contracts.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScheduleInput' }
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupSchedule'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /contracts/{contract}/pickup-schedules/{schedule}:
+    patch:
+      operationId: updateDraftContractSchedule
+      summary: Submit editable fields for a draft schedule
+      description: Requires contracts.write.
+      parameters:
+        - { name: contract, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: schedule, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScheduleInput' }
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupSchedule'
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '419': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: laras_session }
@@ -282,6 +1086,201 @@ components:
                       type: array
                       items: { type: string }
   schemas:
+    Category:
+      type: object
+      required: [id, code, name]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        name: { type: string, maxLength: 160 }
+    CategoryInput:
+      type: object
+      required: [code, name]
+      properties:
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        name: { type: string, maxLength: 120 }
+    Customer:
+      type: object
+      required: [id, code, name, category_id, status]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        name: { type: string, maxLength: 160 }
+        category_id: { type: string, format: uuid }
+        status: { type: string, enum: [active, inactive, archived] }
+    CustomerCreate:
+      type: object
+      required: [code, name, category_id]
+      properties:
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        name: { type: string, maxLength: 160 }
+        category_id: { type: string, format: uuid }
+    CustomerUpdate:
+      type: object
+      properties:
+        name: { type: string, maxLength: 160 }
+        category_id: { type: string, format: uuid }
+        status: { type: string, enum: [active, inactive, archived] }
+    Contact:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 120 }
+        phone: { type: [string, 'null'], maxLength: 32 }
+        email: { type: [string, 'null'], format: email, maxLength: 254 }
+    ContactFields:
+      type: object
+      properties:
+        name: { type: string, maxLength: 120 }
+        phone: { type: [string, 'null'], maxLength: 32 }
+        email: { type: [string, 'null'], format: email, maxLength: 254 }
+    ContactInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 120 }
+        phone: { type: [string, 'null'], maxLength: 32 }
+        email: { type: [string, 'null'], format: email, maxLength: 254 }
+    Location:
+      type: object
+      required: [id, name, address]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 120 }
+        address: { type: string, maxLength: 500 }
+        latitude: { type: [string, 'null'] }
+        longitude: { type: [string, 'null'] }
+    LocationInput:
+      type: object
+      required: [name, address]
+      properties:
+        name: { type: string, maxLength: 120 }
+        address: { type: string, maxLength: 500 }
+        latitude: { type: [string, 'null'] }
+        longitude: { type: [string, 'null'] }
+    LocationFields:
+      type: object
+      properties:
+        name: { type: string, maxLength: 120 }
+        address: { type: string, maxLength: 500 }
+        latitude: { type: [string, 'null'] }
+        longitude: { type: [string, 'null'] }
+    BillingProfile:
+      type: object
+      required: [id, billing_name, address, payment_term_days]
+      properties:
+        id: { type: string, format: uuid }
+        billing_name: { type: string, maxLength: 160 }
+        address: { type: string, maxLength: 500 }
+        email: { type: [string, 'null'], format: email, maxLength: 254 }
+        payment_term_days: { type: integer, minimum: 0, maximum: 365 }
+    BillingInput:
+      type: object
+      required: [billing_name, address, payment_term_days]
+      properties:
+        billing_name: { type: string, maxLength: 160 }
+        address: { type: string, maxLength: 500 }
+        email: { type: [string, 'null'], format: email, maxLength: 254 }
+        payment_term_days: { type: integer, minimum: 0, maximum: 365 }
+    ServiceContract:
+      type: object
+      required: [id, code, customer_id, name, starts_on, status, effective_status]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        customer_id: { type: string, format: uuid }
+        name: { type: string, maxLength: 160 }
+        starts_on: { type: string, format: date }
+        ends_on: { type: [string, 'null'], format: date }
+        status: { type: string, enum: [draft, active, suspended, expired, terminated] }
+        effective_status: { type: string, enum: [draft, active, suspended, expired, terminated] }
+    ContractFields:
+      type: object
+      properties:
+        name: { type: string, maxLength: 160 }
+        starts_on: { type: string, format: date }
+        ends_on: { type: [string, 'null'], format: date }
+    ContractCreate:
+      type: object
+      required: [code, customer_id, name, starts_on]
+      properties:
+        code: { type: string, pattern: '^[A-Z0-9a-z][A-Z0-9a-z_-]{0,31}$' }
+        customer_id: { type: string, format: uuid }
+        name: { type: string, maxLength: 160 }
+        starts_on: { type: string, format: date }
+        ends_on: { type: [string, 'null'], format: date }
+    ContractEvent:
+      type: object
+      required: [id, actor_id, to_status, occurred_at]
+      properties:
+        id: { type: string, format: uuid }
+        actor_id: { type: string, format: uuid }
+        from_status: { type: [string, 'null'] }
+        to_status: { type: string, enum: [draft, active, suspended, expired, terminated] }
+        reason: { type: [string, 'null'] }
+        occurred_at: { type: string, format: date-time }
+    TransitionInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [active, suspended, expired, terminated] }
+        reason: { type: [string, 'null'], maxLength: 500 }
+    ContractService:
+      type: object
+      required: [id, name, location_id]
+      properties:
+        id: { type: string, format: uuid }
+        contract_id: { type: string, format: uuid }
+        customer_id: { type: string, format: uuid }
+        location_id: { type: string, format: uuid }
+        location_name: { type: string }
+        name: { type: string, maxLength: 160 }
+    ServiceInput:
+      type: object
+      required: [name, location_id]
+      properties:
+        location_id: { type: string, format: uuid }
+        name: { type: string, maxLength: 160 }
+    ServiceRate:
+      type: object
+      required: [id, service_id, pricing_model, unit_rate, effective_from]
+      properties:
+        id: { type: string, format: uuid }
+        service_id: { type: string, format: uuid }
+        effective_from: { type: string, format: date }
+        effective_until: { type: [string, 'null'], format: date }
+        pricing_model: { type: string, enum: [monthly, per_pickup, per_kg, one_time] }
+        unit_rate: { type: string, pattern: '^[0-9]{1,14}(\.[0-9]{1,6})?$' }
+    RateInput:
+      type: object
+      required: [pricing_model, unit_rate, effective_from]
+      properties:
+        effective_from: { type: string, format: date }
+        effective_until: { type: [string, 'null'], format: date }
+        pricing_model: { type: string, enum: [monthly, per_pickup, per_kg, one_time] }
+        unit_rate: { type: string, pattern: '^[0-9]{1,14}(\.[0-9]{1,6})?$' }
+        replace_open: { type: boolean }
+    PickupSchedule:
+      type: object
+      required: [id, series_id, service_id, weekday, slot, effective_from]
+      properties:
+        id: { type: string, format: uuid }
+        series_id: { type: string, format: uuid }
+        effective_from: { type: string, format: date }
+        effective_until: { type: [string, 'null'], format: date }
+        service_id: { type: string, format: uuid }
+        weekday: { type: integer, minimum: 1, maximum: 7 }
+        slot: { type: string }
+    ScheduleInput:
+      type: object
+      required: [service_id, weekday, slot, effective_from]
+      properties:
+        effective_from: { type: string, format: date }
+        effective_until: { type: [string, 'null'], format: date }
+        service_id: { type: string, format: uuid }
+        weekday: { type: integer, minimum: 1, maximum: 7 }
+        slot: { type: string, pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$' }
     Role:
       type: object
       required: [code, name]

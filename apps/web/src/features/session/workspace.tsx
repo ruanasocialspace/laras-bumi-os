@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ClipboardList, LayoutDashboard, LogOut, Settings2 } from "lucide-react";
+import { ClipboardList, FileText, LayoutDashboard, LogOut, Settings2, Users } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Loading, Notice } from "@/components/ui/feedback";
@@ -20,6 +20,8 @@ export function useActor() {
 
 const links = [
   { label: "Dasbor", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Pelanggan", href: "/customers", icon: Users, permission: "customers.read" },
+  { label: "Kontrak", href: "/contracts", icon: FileText, permission: "contracts.read" },
   { label: "Pengguna dan peran", href: "/settings/users", icon: Settings2, permission: "identity.manage" },
   { label: "Log audit", href: "/settings/audit", icon: ClipboardList, permission: "audit.read" },
 ];
@@ -84,9 +86,9 @@ export function Workspace({ children }: { children: ReactNode }) {
           <Brand />
           <nav aria-label="Navigasi utama" className="mt-5 flex flex-wrap gap-1 lg:mt-11 lg:flex-col">
             {links.filter(({ permission }) => !permission || actor.permissions.includes(permission)).map(({ label, href, icon: Icon }) => (
-              <Link href={href} key={href} aria-current={pathname === href ? "page" : undefined}
+              <Link href={href} key={href} aria-current={pathname === href || pathname.startsWith(href + "/") ? "page" : undefined}
                 className={cn("flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm font-medium focus-visible:outline-gold lg:w-full",
-                  pathname === href ? "bg-white/15 text-white" : "text-white/85 hover:bg-white/10")}>
+                  pathname === href || pathname.startsWith(href + "/") ? "bg-white/15 text-white" : "text-white/85 hover:bg-white/10")}>
                 <Icon className="size-4 shrink-0" aria-hidden />{label}
               </Link>
             ))}

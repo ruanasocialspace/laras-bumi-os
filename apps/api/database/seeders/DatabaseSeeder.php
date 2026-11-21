@@ -42,6 +42,10 @@ final class DatabaseSeeder extends Seeder
                     ['value'],
                 );
             }
+
+            foreach (['RUMAH_TANGGA' => 'Rumah Tangga', 'USAHA' => 'Usaha', 'INSTANSI' => 'Instansi', 'LAINNYA' => 'Lainnya'] as $code => $name) {
+                DB::table('customer_categories')->insertOrIgnore(['id' => Str::uuid()->toString(), 'code' => $code, 'name' => $name]);
+            }
         });
     }
 }

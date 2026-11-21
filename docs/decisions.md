@@ -33,6 +33,11 @@ Candidates checked against upstream support and runtime requirements on 21 Novem
 | B09 | Owner before Phase 1 RBAC review and domain release | Confirm approver staffing and segregation of duties. Proposed policy requires a distinct recorder and verifier on payment and distinct makers/checkers on material corrections, QC and voids. |
 | B10 | Owner and deployment operator before Phase 7 | Approve environment ownership, data retention, target phones and acceptable outage/data-loss windows. Validate documented backup restoration and incident procedures against those targets. |
 
+### Phase 2 operating assumptions
+
+- B01 uses four generic starter categories with manager-created additions, contract-specific service names and expressly entered payment terms. The definitive business category and service lists remain open. The app accepts future rate amendments under pricing permission and protects the historical rate amount.
+- B02 starts with weekly schedules specified by weekday, time in WIB and date range. Activation requires an eligible customer, a service location and at least one dated weekly occurrence with a rate for each service. Dispatch, holiday overrides and handling of generated tasks follow in Phase 3.
+
 - Shared-device queue loss, browser storage eviction and permissions revocation require real-device acceptance. Design the pilot around the phones and browsers B10 identifies.
 - Concurrent stock changes, out-of-order sync and retries after partial job failures can compromise data if only application validation is used. Require PostgreSQL uniqueness, transactional locks and race tests.
 - Mixed-load per-kg billing, feed eligibility and tax configuration are operational decision points. Block individual actions without validated policy or evidence and show explainable exceptions to authorized staff.

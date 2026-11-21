@@ -38,7 +38,7 @@ final class ApiErrors
             403 => ['forbidden', 'Anda tidak memiliki izin untuk tindakan ini.'],
             404 => ['not_found', 'Data tidak ditemukan.'],
             405 => ['method_not_allowed', 'Metode permintaan tidak didukung.'],
-            409 => ['state_conflict', 'Perubahan bertentangan dengan status akun saat ini.'],
+            409 => ['state_conflict', 'Perubahan bertentangan dengan status data saat ini.'],
             413 => ['payload_too_large', 'Ukuran permintaan terlalu besar.'],
             415 => ['unsupported_media_type', 'Format data tidak didukung.'],
             419 => ['csrf_expired', 'Sesi keamanan telah berakhir. Silakan coba lagi.'],

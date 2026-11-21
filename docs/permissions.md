@@ -4,6 +4,8 @@ Seed stable role and permission codes. Laravel policies enforce action permissio
 
 Phase 1 enforces `identity.manage` on account and role-catalog access, and `audit.read` on audit access. The API applies these checks before looking up an account ID. A signed-in user can read their own identity and operational reference defaults. The approved role definitions are configured in the role catalog seeder and assigned or revoked per account. Domain-specific codes are seeded for future phases. Approval staffing in B09 remains open.
 
+Phase 2 uses Laravel permission gates on every customer and contract route. Operations Admin can draft contracts and define schedules. Operations Manager can also create customer categories, set rates and transition contracts. Finance Officer receives `customers.read` to find customers before maintaining their billing profiles. Billing reads and writes still require `finance.read` and `finance.bill` respectively. Operations permissions alone grant neither. Driver accounts cannot access the customer or contract directories.
+
 | Role | Proposed scope |
 |---|---|
 | Super Admin | Identity provisioning, role assignment, system settings, audit review and explicitly granted domain permissions |

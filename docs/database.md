@@ -8,6 +8,12 @@ The identity migration creates `users`, `roles`, `permissions`, `user_roles` and
 
 The standard seeder sets the eight-role catalog and the IDR, kg and Asia/Jakarta defaults. It preserves existing user grants. The local-only demo command provisions synthetic users from environment-supplied credentials. Sessions and job queues are stored in Redis. The remaining entities and relationships below describe later phases.
 
+## Phase 2 schema
+
+The customer and contract migration adds customer categories, profiles, contacts, pickup locations, contracts, status events, services, rates and weekly schedules. A composite foreign key ties a service to a location under the same customer as its contract. The schedule references that service and derives its location through the relationship. Billing profiles have one row per customer. Rate amounts use `numeric(20,6)` and remain decimal strings in the API. Contract status events are append-only, with a PostgreSQL guard against update, delete and truncate.
+
+`btree_gist` supports exclusion constraints on effective ranges. A service can have only one rate on a date and one schedule for a weekday and time within an overlapping range. The existing database role can install this trusted extension when it owns the database. Managed environments can provision it before migration. Customer status, contract transitions and dependent writes lock customers before contracts. Contract status and audit events are written in the same transaction as the transition.
+
 ```mermaid
 erDiagram
     USERS ||--o{ USER_ROLES : assigned

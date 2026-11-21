@@ -19,6 +19,9 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:identity'])->group(functi
     Route::get('reference', [InfrastructureController::class, 'reference']);
     Route::get('audit-logs', [InfrastructureController::class, 'audits'])->middleware('can:audit.read');
 
+    require __DIR__.'/customers.php';
+    require __DIR__.'/contracts.php';
+
     Route::middleware('can:manage,'.User::class)->group(function (): void {
         Route::get('roles', [AccountsController::class, 'roles']);
         Route::get('users', [AccountsController::class, 'index']);
