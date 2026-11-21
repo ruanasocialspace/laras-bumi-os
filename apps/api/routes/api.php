@@ -21,6 +21,7 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:identity'])->group(functi
 
     require __DIR__.'/customers.php';
     require __DIR__.'/contracts.php';
+    require __DIR__.'/collections.php';
 
     Route::middleware('can:manage,'.User::class)->group(function (): void {
         Route::get('roles', [AccountsController::class, 'roles']);

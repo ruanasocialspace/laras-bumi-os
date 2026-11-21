@@ -1,10 +1,31 @@
 <?php
 
+use App\Modules\Collections\GeneratePickups;
 use App\Modules\IdentityAccess\Accounts;
 use App\Modules\IdentityAccess\RoleCatalog;
+use App\Modules\SharedInfrastructure\BusinessDate;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+
+Artisan::command('collections:generate {--date=}', function (GeneratePickups $generator): int {
+    $validator = Validator::make(['service_date' => $this->option('date') ?? BusinessDate::today()], [
+        'service_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.BusinessDate::today()],
+    ]);
+    if ($validator->fails()) {
+        $this->error('Gunakan tanggal hari ini atau mendatang (YYYY-MM-DD).');
+
+        return 1;
+    }
+
+    $count = $generator->forDate($validator->validated()['service_date']);
+    $this->info("$count pengambilan dibuat.");
+
+    return 0;
+})->purpose('Generate recurring pickup tasks for a Jakarta business date');
+
+Schedule::command('collections:generate')->dailyAt('00:05')->timezone('Asia/Jakarta')->withoutOverlapping(30);
 
 Artisan::command('identity:seed-demo', function (Accounts $accounts): int {
     $password = config('laras.demo_password');

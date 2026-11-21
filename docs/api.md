@@ -14,6 +14,14 @@ Contract history, services, rates and pickup schedules are scoped to the contrac
 
 `ends_on` is inclusive. Rate and schedule windows use an inclusive start and exclusive end. For a finite contract, an omitted end defaults to the day after `ends_on`. Rates accept decimal strings with up to six decimal places. An explicit `replace_open: true` closes a previous rate that ran to the contract boundary or had no end, then inserts the replacement in the same transaction. Existing rate amounts are preserved.
 
+## Phase 3 endpoints
+
+Use `/pickup-tasks` for the dispatch board. It defaults to the current Jakarta date and accepts `service_date`. Set `history=1` for terminal pickups. Driver screens use `assigned=1` and an `X-Driver-Actor` header matching the current driver so a dual-role account still downloads only assigned tasks. Customer pickup history accepts pagination and requires both customer and collection read access.
+
+Dispatch can create manual pickups, generate weekly occurrences for a selected date, register vehicles, assign or reassign open pickups, and cancel open pickups with a reason. Manual creation accepts a stable `client_task_id`. Reuse the same value on retry. Assignment, cancellation and driver events use an expected revision. A stale revision can return `error.current_revision` for a visible task.
+
+Driver event and multipart evidence requests also require `X-Driver-Actor`. Events carry a stable `client_event_id` and UTC capture timestamp with milliseconds. Completion carries GPS and accuracy, a positive decimal amount in kg, a weight basis and accepted evidence IDs. Failure carries a reason. A staged photograph can be replayed with the same file UUID and image bytes. Downloads serve only authorized sanitized JPEGs. See [OpenAPI](../contracts/openapi.yaml) for paths and schemas.
+
 The endpoint map below also includes the planned business modules.
 
 ## Conventions

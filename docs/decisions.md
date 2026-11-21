@@ -38,6 +38,11 @@ Candidates checked against upstream support and runtime requirements on 21 Novem
 - B01 uses four generic starter categories with manager-created additions, contract-specific service names and expressly entered payment terms. The definitive business category and service lists remain open. The app accepts future rate amendments under pricing permission and protects the historical rate amount.
 - B02 starts with weekly schedules specified by weekday, time in WIB and date range. Activation requires an eligible customer, a service location and at least one dated weekly occurrence with a rate for each service. Dispatch, holiday overrides and handling of generated tasks follow in Phase 3.
 
+### Phase 3 operating assumptions
+
+- Generate today's eligible recurring pickups at 00:05 WIB and allow an authorized dispatcher to generate a selected current or future date. Keep previously generated work when contracts are suspended and flag it on the dispatch board. Dispatch can cancel an obsolete task with a reason and create a replacement if needed. Holiday calendars and automatic rescheduling depend on the confirmed B02 policy.
+- Require a JPEG or PNG photo, GPS and a weight basis for completion. Keep queued evidence on the device until acknowledgment, including after an ambiguous server response or assignment conflict. A driver can resume after reconnecting and signing in with the same account. Device retention, server-side retention, and field testing on the operating fleet remain open under B03.
+
 - Shared-device queue loss, browser storage eviction and permissions revocation require real-device acceptance. Design the pilot around the phones and browsers B10 identifies.
 - Concurrent stock changes, out-of-order sync and retries after partial job failures can compromise data if only application validation is used. Require PostgreSQL uniqueness, transactional locks and race tests.
 - Mixed-load per-kg billing, feed eligibility and tax configuration are operational decision points. Block individual actions without validated policy or evidence and show explainable exceptions to authorized staff.

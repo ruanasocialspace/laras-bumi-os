@@ -2,6 +2,8 @@
 vendor/
 bootstrap/cache/*.php
 storage/logs/*.log
+storage/app/private/
+storage/framework/testing/
 .phpunit.cache/
 .phpunit.result.cache
 storage/framework/cache/phpunit/

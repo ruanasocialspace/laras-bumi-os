@@ -22,10 +22,12 @@ final class AppServiceProvider extends ServiceProvider
         foreach ([
             'customers.read', 'customers.write', 'customers.categories.manage',
             'contracts.read', 'contracts.write', 'contracts.activate', 'contracts.pricing.write',
-            'finance.read', 'finance.bill',
+            'finance.read', 'finance.bill', 'collections.read', 'collections.dispatch', 'collections.drive',
         ] as $permission) {
             Gate::define($permission, fn (User $user): bool => $user->hasPermission($permission));
         }
+        Gate::define('collections.view', fn (User $user): bool => $user->hasPermission('collections.read')
+            || $user->hasPermission('collections.drive'));
         RateLimiter::for('login', function (Request $request): array {
             $input = $request->input('email');
             $email = is_string($input) ? Str::lower(substr($input, 0, 254)) : '';

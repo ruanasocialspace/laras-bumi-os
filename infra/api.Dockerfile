@@ -4,8 +4,10 @@ FROM php:8.5-fpm-bookworm
 WORKDIR /app
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev unzip \
-    && docker-php-ext-install -j"$(nproc)" pdo_pgsql pcntl \
+    && apt-get install -y --no-install-recommends libpq-dev libjpeg62-turbo-dev libpng-dev unzip \
+    && docker-php-ext-configure gd --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" pdo_pgsql pcntl gd \
+    && printf 'upload_max_filesize=8M\npost_max_size=9M\n' > /usr/local/etc/php/conf.d/laras-upload.ini \
     && rm -rf /var/lib/apt/lists/*
 
 ENV COMPOSER_ALLOW_SUPERUSER=1

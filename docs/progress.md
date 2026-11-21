@@ -82,8 +82,30 @@ Implemented and verified locally. The Indonesian customer directory and detail p
 - `npm run lint`, `npm run typecheck`, `npm run contract:lint` and `npm run build` passed. Compared Laravel's route listing to all 29 documented Phase 2 OpenAPI operations. `git diff --check` passed.
 - Started PHP and Next.js behind the temporary same-origin proxy and checked readiness over HTTP. `npm run test:e2e` passed all four Chromium tests, including customer registration through contract activation and suspension.
 
-Phase 2 uses starter customer categories, contract-specific service names and explicit payment terms. Review the definitive company categories and service names before operational adoption. Customer pickup history follows in Phase 3 and invoice history follows in Phase 6. Weekly schedule definitions are available for Phase 3 task generation. Hosted CI for the Phase 2 changes remains pending a push. The next phase is Collection Management and the Driver PWA, subject to explicit authorization.
+Phase 2 uses starter customer categories, contract-specific service names and explicit payment terms. Review the definitive company categories and service names before operational adoption. The owner pushed Phase 2 to the tracked GitHub branch. Weekly schedule definitions and customer pickup history are integrated in Phase 3. Invoice history follows in Phase 6.
 
 ### Local preview
 
 Started the Phase 2 application on loopback with workspace-local PostgreSQL and Redis. Created a dedicated local preview account for operations and billing. Verified the login page, authenticated session, and customer and contract API reads. The credentials file is kept in the ignored local tools directory.
+
+## Phase 3 · Collection Management and Driver PWA · 22 November 2026
+
+Implemented and verified locally. The dispatch board lists daily pickups, registers vehicles, creates manual pickups, generates recurring tasks, assigns or reassigns a driver and vehicle, and cancels open pickups with a reason. Suspended contract tasks remain on the board for dispatch review. Customer profiles now show pickup history.
+
+The installable Indonesian driver app downloads assigned tasks and allows departure, arrival, failure, and completion capture when disconnected. IndexedDB keeps stable event and file IDs, timestamps, evidence and expected revisions. The service worker caches the driver app shell and static assets. Reconnecting, opening the app or tapping **Sinkronkan** can replay the queue. Revisions, role checks and UUIDs protect task ownership and replay. The backend re-encodes accepted photos to private JPEGs and records field weight separately from future facility verification.
+
+| Area | Files |
+|---|---|
+| PostgreSQL and API | [Collection migration](../apps/api/database/migrations/2026_11_22_000002_create_collection_tables.php), [collection module](../apps/api/app/Modules/Collections), [collection routes](../apps/api/routes/collections.php), [scheduler](../apps/api/routes/console.php) and [OpenAPI](../contracts/openapi.yaml) |
+| UI and offline storage | [Dispatch and driver components](../apps/web/src/features/collection), [driver route](../apps/web/src/app/driver), and [manifest and service worker](../apps/web/public/driver) |
+| Evidence transport | [API build](../infra/api.Dockerfile), [Nginx settings](../infra/nginx.dev.conf), and [Composer dependency manifests](../apps/api) |
+| Regression tests | [PHPUnit collection tests](../apps/api/tests/Feature/CollectionTest.php) and [Playwright driver journey](../apps/web/tests/e2e/collection-driver.spec.ts) |
+| Documentation | [Local test guide](development.md), [API](api.md), [database](database.md), [permissions](permissions.md) and [B02/B03 assumptions](decisions.md) |
+
+### Verification
+
+- `php artisan migrate --seed --force` upgraded the existing PostgreSQL 18.7 database. `migrate:status` showed all four migrations applied. `schedule:list` listed recurring pickup generation. PHPUnit exercised clean migrations, active and inactive generation, reassignment conflicts, private photo access and replay. The full run passed **17 tests with 284 assertions**.
+- Composer lock validation and platform checks, Pint, Next.js lint and type checks, the production build, OpenAPI lint and Docker Compose config validation passed. Matched all 16 documented Phase 3 operations to actual Laravel routes and verified the same-origin health endpoint. Local and test photo storage is excluded from Git and Docker build contexts.
+- The browser test exposed a driver entry navigation that left the service worker outside control and a native PHP upload scratch directory restriction. The driver links now load a document in the worker's scope, and the workspace-local test server used a writable temporary upload path. The full Playwright suite passed **5 tests**. The mobile-viewport Chromium test captured simulated GPS and a real image, reloaded with three queued events while offline, dropped the first response after the server committed it, then synchronized without duplicate events, evidence or weights.
+
+Physical handset testing, HTTPS field setup, and approval of B02 holiday or rescheduling rules and B03 retention remain open. The private evidence adapter is local storage. S3 setup and unattended evidence cleanup remain pending. Hosted CI awaits a push of Phase 3. Phase 4 is Waste Tracking and the Material Ledger, subject to explicit authorization.

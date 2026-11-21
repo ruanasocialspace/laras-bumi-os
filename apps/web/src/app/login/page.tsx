@@ -9,7 +9,8 @@ import { z } from "zod";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/feedback";
-import { api, ApiError, errorMessage } from "@/lib/api";
+import { actorFromDisk, clearActiveDriver } from "@/features/collection/offline-store";
+import { api, ApiError, errorMessage, type Account } from "@/lib/api";
 
 const credentials = z.object({
   email: z.email("Masukkan alamat email yang valid."),
@@ -28,8 +29,17 @@ export default function LoginPage() {
   async function login(input: Credentials) {
     setFailure("");
     try {
-      await api("/auth/login", { method: "POST", body: JSON.stringify(input) });
-      router.replace("/dashboard");
+      const { data } = await api<{ data: Account }>("/auth/login", { method: "POST", body: JSON.stringify(input) });
+      const cached = await actorFromDisk().catch(() => undefined);
+      if (cached && (cached.id !== data.id || !data.permissions.includes("collections.drive"))) {
+        await clearActiveDriver();
+      }
+      const destination = new URLSearchParams(window.location.search).get("next");
+      if (destination === "/driver/app" && data.permissions.includes("collections.drive")) {
+        window.location.assign(destination);
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (error) {
       if (error instanceof ApiError && error.fields.email) {
         setError("email", { message: error.fields.email[0] }, { shouldFocus: true });

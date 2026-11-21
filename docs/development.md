@@ -76,3 +76,11 @@ npm run test:e2e
 ```
 
 Review `docker compose logs migrate api worker scheduler edge web` if readiness or startup fails. Rebuild after source changes with `docker compose up -d --build`. Use `docker compose down` when finished to preserve named volumes. The contract is in [OpenAPI](../contracts/openapi.yaml) and CI is in [Foundation checks](../.github/workflows/phase-1.yml).
+
+## Try collection and offline pickup
+
+Rebuild the API and edge for the GD photo extension and multipart limits. Use an Operations Admin or Operations Manager account to register a vehicle at **Pengambilan → Kendaraan**. From **Penugasan**, create a manual pickup or generate a scheduled date and assign the task to a driver. The scheduler runs the same generator each day at 00:05 WIB. You can invoke it with `docker compose exec api php artisan collections:generate`.
+
+Sign in as the assigned driver and open [Aplikasi pengemudi](http://localhost:8080/driver/app). Allow location access and let the application download the assigned day and prepare the offline shell. Disconnect once it shows ready. Record departure, arrival and completion with a test JPEG or PNG and a weight basis. A queued event and its photo should survive reload. Reconnect and use **Sinkronkan** if foreground sync has not started. The dispatch timeline displays the result and its authorized photo link.
+
+Camera and GPS require a secure origin on phones. Loopback can exercise the workflow on the development computer. The current local image disk is private and shared by the API and worker, and the driver keeps browser-local evidence pending server acknowledgment. Use a disposable development database and synthetic photos when testing.

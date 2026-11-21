@@ -3,10 +3,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ClipboardList, FileText, LayoutDashboard, LogOut, Settings2, Users } from "lucide-react";
+import { ClipboardList, FileText, LayoutDashboard, LogOut, Settings2, Truck, Users } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Loading, Notice } from "@/components/ui/feedback";
+import { actorFromDisk, clearActiveDriver, readQueue } from "@/features/collection/offline-store";
 import { api, ApiError, errorMessage, type Account } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,8 @@ const links = [
   { label: "Dasbor", href: "/dashboard", icon: LayoutDashboard },
   { label: "Pelanggan", href: "/customers", icon: Users, permission: "customers.read" },
   { label: "Kontrak", href: "/contracts", icon: FileText, permission: "contracts.read" },
+  { label: "Pengambilan", href: "/collection", icon: Truck, permission: "collections.read" },
+  { label: "Aplikasi pengemudi", href: "/driver/app", icon: Truck, permission: "collections.drive" },
   { label: "Pengguna dan peran", href: "/settings/users", icon: Settings2, permission: "identity.manage" },
   { label: "Log audit", href: "/settings/audit", icon: ClipboardList, permission: "audit.read" },
 ];
@@ -55,7 +58,15 @@ export function Workspace({ children }: { children: ReactNode }) {
     setSigningOut(true);
     setSignOutError("");
     try {
+      if (actor?.permissions.includes("collections.drive") && (await actorFromDisk())?.id === actor.id) {
+        const pending = await readQueue(actor.id);
+        if (pending.length > 0) {
+          setSignOutError("Buka Aplikasi pengemudi untuk mengirim antrean atau mengonfirmasi keluar dengan data tersimpan.");
+          return;
+        }
+      }
       await api("/auth/logout", { method: "POST" });
+      await clearActiveDriver().catch(() => undefined);
       setActor(null);
       router.replace("/login");
     } catch (error) {
@@ -85,13 +96,15 @@ export function Workspace({ children }: { children: ReactNode }) {
         <aside className="bg-primary px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:px-5 lg:py-8">
           <Brand />
           <nav aria-label="Navigasi utama" className="mt-5 flex flex-wrap gap-1 lg:mt-11 lg:flex-col">
-            {links.filter(({ permission }) => !permission || actor.permissions.includes(permission)).map(({ label, href, icon: Icon }) => (
-              <Link href={href} key={href} aria-current={pathname === href || pathname.startsWith(href + "/") ? "page" : undefined}
+            {links.filter(({ permission }) => !permission || actor.permissions.includes(permission)).map(({ label, href, icon: Icon }) => {
+              // The driver worker can control a document loaded inside its scope.
+              const NavLink = href.startsWith("/driver/") ? "a" : Link;
+              return <NavLink href={href} key={href} aria-current={pathname === href || pathname.startsWith(href + "/") ? "page" : undefined}
                 className={cn("flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm font-medium focus-visible:outline-gold lg:w-full",
                   pathname === href || pathname.startsWith(href + "/") ? "bg-white/15 text-white" : "text-white/85 hover:bg-white/10")}>
                 <Icon className="size-4 shrink-0" aria-hidden />{label}
-              </Link>
-            ))}
+              </NavLink>;
+            })}
           </nav>
         </aside>
         <div>

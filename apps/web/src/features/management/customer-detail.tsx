@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CustomerPickupHistory } from "@/features/collection/dispatch";
 import { Loading, Notice } from "@/components/ui/feedback";
 import { useActor } from "@/features/session/workspace";
 import { contractStatus, customerStatus, DataError, Editor, options, Records, useRecords, type Field, type Values } from "./shared";
@@ -85,6 +86,7 @@ function CustomerProfile({ id }: { id: string }) {
         initial={(location) => ({ name: location.name, address: location.address, latitude: location.latitude ?? "", longitude: location.longitude ?? "" })}
         description={(location) => location.address + (location.latitude !== null ? " · " + location.latitude + ", " + location.longitude : "")} />
     </div>
+    {actor.permissions.includes("collections.read") && <CustomerPickupHistory customerId={id} />}
     {actor.permissions.includes("finance.read") && <BillingPanel path={path + "/billing-profile"}
       editable={customer.status !== "archived" && actor.permissions.includes("finance.bill")} />}
     {actor.permissions.includes("contracts.read") && <section className="panel space-y-4" aria-label="Kontrak pelanggan">

@@ -6,6 +6,8 @@ Phase 1 enforces `identity.manage` on account and role-catalog access, and `audi
 
 Phase 2 uses Laravel permission gates on every customer and contract route. Operations Admin can draft contracts and define schedules. Operations Manager can also create customer categories, set rates and transition contracts. Finance Officer receives `customers.read` to find customers before maintaining their billing profiles. Billing reads and writes still require `finance.read` and `finance.bill` respectively. Operations permissions alone grant neither. Driver accounts cannot access the customer or contract directories.
 
+Phase 3 separates office read, dispatch write and driver access. Driver-only users can read their currently assigned tasks and their own terminal history. The PWA requests assigned tasks only, including for dual-role accounts. Event and upload commands bind the signed-in user to the driver account that captured the record. Dispatch can assign active drivers and vehicles, and office readers can view photos once a completed pickup links them. Customers with open pickups cannot be archived.
+
 | Role | Proposed scope |
 |---|---|
 | Super Admin | Identity provisioning, role assignment, system settings, audit review and explicitly granted domain permissions |

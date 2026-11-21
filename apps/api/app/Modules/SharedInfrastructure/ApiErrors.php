@@ -52,6 +52,9 @@ final class ApiErrors
         if ($error instanceof ValidationException) {
             $body['fields'] = $error->errors();
         }
+        if ($error instanceof RevisionConflict) {
+            $body['current_revision'] = $error->currentRevision;
+        }
 
         $headers = $error instanceof HttpExceptionInterface ? $error->getHeaders() : [];
         $headers['Cache-Control'] = 'no-store';

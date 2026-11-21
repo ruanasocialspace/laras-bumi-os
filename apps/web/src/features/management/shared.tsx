@@ -33,20 +33,21 @@ export function options(labels: Record<string, string>): Option[] {
   return Object.entries(labels).map(([value, label]) => ({ value, label }));
 }
 
-export function useRecords<T>(path: string) {
+export function useRecords<T>(path: string, headers?: Record<string, string>) {
   const [revision, setRevision] = useState(0);
-  const key = path + "#" + revision;
+  const requestHeaders = JSON.stringify(headers ?? {});
+  const key = path + "#" + requestHeaders + "#" + revision;
   const [result, setResult] = useState<{ key: string; data?: T; error?: string } | null>(null);
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    api<T>(path, { signal: controller.signal })
+    api<T>(path, { signal: controller.signal, headers: JSON.parse(requestHeaders) as Record<string, string> })
       .then((data) => { if (!controller.signal.aborted) setResult({ key, data }); })
       .catch((failure: unknown) => {
         if (!controller.signal.aborted) setResult({ key, error: errorMessage(failure) });
       });
     return () => controller.abort();
-  }, [key, path]);
+  }, [key, path, requestHeaders]);
 
   const current = result?.key === key ? result : null;
   return { data: current?.data, error: current?.error, refresh: () => setRevision((count) => count + 1) };
@@ -56,12 +57,12 @@ export function DataError({ error, onRetry }: { error: string; onRetry: () => vo
   return <div className="space-y-3"><Notice>{error}</Notice><Button variant="outline" onClick={onRetry}>Coba lagi</Button></div>;
 }
 
-export function Records<T extends { id: string }>({ path, empty, render }: {
-  path: string; empty: string; render: (row: T) => ReactNode;
+export function Records<T extends { id: string }>({ path, empty, render, headers }: {
+  path: string; empty: string; render: (row: T) => ReactNode; headers?: Record<string, string>;
 }) {
   const [page, setPage] = useState(1);
   const { data, error, refresh } = useRecords<Page<T>>(path
-    + (path.includes("?") ? "&" : "?") + "page=" + page + "&per_page=15");
+    + (path.includes("?") ? "&" : "?") + "page=" + page + "&per_page=15", headers);
   return <div className="space-y-4">
     {error ? <DataError error={error} onRetry={refresh} />
       : !data ? <Loading />

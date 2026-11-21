@@ -48,6 +48,12 @@ erDiagram
     INVOICES ||--o{ PAYMENT_ALLOCATIONS : settles
 ```
 
+## Phase 3 schema
+
+The collection migration adds vehicles, pickup tasks, append-only pickup events, staged and linked evidence, and field weight entries. Tasks preserve a pickup location snapshot with an ownership foreign key. Generated tasks have a unique schedule series, date and time. Manual task IDs come from the submitting client. Each state transition increments its task revision and adds one history row with a unique sequence. Capture and receive times are tracked separately. Event UUIDs and request hashes make repeated sync idempotent.
+
+Evidence belongs to a task and uploader before an accepted event links it. The database records an object key and digest, while sanitized JPEGs live on the private local storage disk. Completion weights store kg and an `estimated` or `field_measured` basis. Facility verification follows in Phase 4.
+
 ## Entities, keys and indexes
 
 | Domain | Schema and relationships |

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Customers;
 
+use App\Modules\Collections\CollectionData;
 use App\Modules\IdentityAccess\User;
 use App\Modules\SharedInfrastructure\AuditLog;
 use Illuminate\Database\QueryException;
@@ -13,8 +14,11 @@ use Illuminate\Validation\ValidationException;
 
 final class Customers
 {
-    public function __construct(private readonly CustomerData $data, private readonly AuditLog $audit)
-    {
+    public function __construct(
+        private readonly CustomerData $data,
+        private readonly AuditLog $audit,
+        private readonly CollectionData $collections,
+    ) {
     }
 
     public function create(User $actor, string $type, array $fields): object
@@ -51,6 +55,9 @@ final class Customers
 
             if ($target !== $customer->status && $target !== 'active') {
                 abort_if($this->data->hasOpenContracts($id, includeDraft: $target === 'archived'), 409);
+            }
+            if ($target === 'archived') {
+                abort_if($this->collections->hasOpenForCustomer($id), 409);
             }
 
             DB::table('customers')->where('id', $id)->update($fields + ['updated_at' => now()]);
