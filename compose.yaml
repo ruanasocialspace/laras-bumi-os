@@ -1,0 +1,132 @@
+name: laras-bumi-os
+
+x-api: &api
+  build:
+    context: ./apps/api
+    dockerfile: ../../infra/api.Dockerfile
+  image: laras-bumi-os/api:dev
+  environment:
+    APP_ENV: local
+    APP_KEY: ${LARAS_APP_KEY:?set LARAS_APP_KEY in .env}
+    APP_URL: "http://localhost:${LARAS_PORT:-8080}"
+    APP_DEBUG: "false"
+    LOG_CHANNEL: stderr
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_DATABASE: laras
+    DB_TEST_DATABASE: laras_test
+    DB_USERNAME: laras
+    DB_PASSWORD: ${LARAS_DB_PASSWORD:?set LARAS_DB_PASSWORD in .env}
+    REDIS_CLIENT: predis
+    REDIS_HOST: redis
+    REDIS_QUEUE_CONNECTION: queue
+    REDIS_QUEUE_HOST: redis-queue
+    CACHE_STORE: redis
+    SESSION_DRIVER: redis
+    SESSION_SECURE_COOKIE: "false"
+    QUEUE_CONNECTION: redis
+    SANCTUM_STATEFUL_DOMAINS: "localhost:${LARAS_PORT:-8080},127.0.0.1:${LARAS_PORT:-8080}"
+    LARAS_DEMO_ACCOUNTS: "${LARAS_DEMO_ACCOUNTS:-false}"
+    LARAS_DEMO_PASSWORD: "${LARAS_DEMO_PASSWORD:-}"
+
+services:
+  postgres:
+    image: postgres:18.7-bookworm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${LARAS_DB_ADMIN_PASSWORD:?set LARAS_DB_ADMIN_PASSWORD in .env}
+      LARAS_DB_PASSWORD: ${LARAS_DB_PASSWORD:?set LARAS_DB_PASSWORD in .env}
+    volumes:
+      - postgres:/var/lib/postgresql
+      - ./infra/init-postgres.sh:/docker-entrypoint-initdb.d/01-laras.sh:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  redis-queue:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-queue:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  migrate:
+    <<: *api
+    command: ["php", "artisan", "migrate", "--seed", "--force"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *api
+    volumes:
+      - private-files:/app/storage/app/private
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+
+  worker:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "redis", "--timeout=60", "--tries=3"]
+    stop_grace_period: 70s
+    volumes:
+      - private-files:/app/storage/app/private
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis-queue:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    <<: *api
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infra/web.Dockerfile
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+  edge:
+    image: nginx:1.28-alpine
+    ports:
+      - "127.0.0.1:${LARAS_PORT:-8080}:80"
+    volumes:
+      - ./infra/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+
+volumes:
+  postgres:
+  redis-queue:
+  private-files:

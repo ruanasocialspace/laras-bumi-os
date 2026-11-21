@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, system-ui, sans-serif;
+  --color-primary: #174d3b;
+  --color-gold: #b69a62;
+  --color-background: #f7f9f7;
+  --color-ink: #1f2937;
+  --color-subtle: #52615a;
+  --color-line: #dce5de;
+  --color-muted: #edf3ee;
+  --color-white: #ffffff;
+}
+
+@layer base {
+  body { @apply bg-background font-sans text-ink antialiased; }
+  :is(a, input, button):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+}
+
+@layer components {
+  .panel { @apply rounded-2xl border border-line bg-white p-5 sm:p-7; }
+  .control { @apply min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink; }
+  .field-label { @apply mb-1.5 block text-sm font-semibold; }
+  .field-error { @apply mt-1 text-sm text-red-800; }
+}

@@ -1,0 +1,60 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run lint && npm run typecheck && npm run contract:lint && npm run build
+        working-directory: apps/web
+      - name: Generate disposable Compose settings
+        run: |
+          {
+            echo "LARAS_APP_KEY=base64:$(openssl rand -base64 32)"
+            echo "LARAS_DB_PASSWORD=$(openssl rand -hex 24)"
+            echo "LARAS_DB_ADMIN_PASSWORD=$(openssl rand -hex 24)"
+            echo "LARAS_DEMO_ACCOUNTS=true"
+            echo "LARAS_DEMO_PASSWORD=$(openssl rand -hex 24)"
+          } >> .env
+      - run: docker compose config --quiet
+      - run: docker compose up -d --build
+      - name: Wait for the same-origin stack
+        run: |
+          curl --fail --silent --show-error --retry 30 --retry-delay 2 --retry-all-errors http://localhost:8080/api/v1/health/ready
+          curl --fail --silent --show-error --retry 15 --retry-delay 2 --retry-all-errors http://localhost:8080/login > /dev/null
+      - run: docker compose exec -T api composer validate --strict
+      - run: docker compose exec -T api composer lint
+      - run: docker compose exec -T api php artisan migrate:status
+      - run: docker compose exec -T api composer test
+      - run: docker compose exec -T api php artisan db:seed --force
+      - run: docker compose exec -T api php artisan identity:seed-demo
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Browser integration
+        working-directory: apps/web
+        run: |
+          set -a
+          source ../../.env
+          set +a
+          npm run test:e2e
+      - name: Diagnostic logs
+        if: failure()
+        run: docker compose logs --tail=100
+      - run: docker compose down
+        if: always()
